@@ -1,0 +1,628 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+  <meta name="theme-color" content="#ff6b35">
+  <title>Sketch Rush | 3秒お絵かき記憶ゲーム</title>
+  <style>
+    :root {
+      --ink: #20213a;
+      --muted: #6f728f;
+      --paper: #fffdf7;
+      --orange: #ff6b35;
+      --yellow: #ffd23f;
+      --purple: #7357ff;
+      --green: #22a86a;
+      --red: #e84a5f;
+      --shadow: 0 18px 50px rgba(47, 37, 85, .16);
+    }
+    * { box-sizing: border-box; }
+    html, body { min-height: 100%; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      font-family: system-ui, -apple-system, "Hiragino Sans", "Yu Gothic UI", sans-serif;
+      background:
+        radial-gradient(circle at 10% 10%, rgba(255,210,63,.55), transparent 30%),
+        radial-gradient(circle at 90% 90%, rgba(115,87,255,.22), transparent 30%),
+        #fff7e8;
+      overscroll-behavior: none;
+    }
+    button, input { font: inherit; }
+    button { -webkit-tap-highlight-color: transparent; }
+    .app {
+      width: min(100%, 560px);
+      min-height: 100svh;
+      margin: 0 auto;
+      padding: max(18px, env(safe-area-inset-top)) 16px max(20px, env(safe-area-inset-bottom));
+      display: grid;
+      align-items: center;
+    }
+    .screen {
+      display: none;
+      width: 100%;
+      animation: appear .25s ease-out;
+    }
+    .screen.active { display: block; }
+    .card {
+      padding: clamp(22px, 6vw, 34px);
+      border: 3px solid var(--ink);
+      border-radius: 28px;
+      background: rgba(255,253,247,.96);
+      box-shadow: 8px 8px 0 var(--ink), var(--shadow);
+    }
+    .eyebrow {
+      margin: 0 0 8px;
+      color: var(--purple);
+      font-size: .8rem;
+      font-weight: 900;
+      letter-spacing: .15em;
+      text-transform: uppercase;
+    }
+    h1 {
+      margin: 0;
+      font-size: clamp(3rem, 14vw, 5.2rem);
+      line-height: .88;
+      letter-spacing: -.07em;
+    }
+    h1 span { display: block; color: var(--orange); }
+    .lead {
+      margin: 22px 0 26px;
+      color: var(--muted);
+      font-weight: 700;
+      line-height: 1.8;
+    }
+    .rules {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin: 0 0 26px;
+    }
+    .rule {
+      padding: 13px 6px;
+      border: 2px solid var(--ink);
+      border-radius: 16px;
+      background: white;
+      text-align: center;
+      font-size: .78rem;
+      font-weight: 900;
+    }
+    .rule b {
+      display: block;
+      color: var(--orange);
+      font-size: 1.35rem;
+    }
+    .primary, .secondary {
+      width: 100%;
+      min-height: 58px;
+      border: 3px solid var(--ink);
+      border-radius: 18px;
+      color: white;
+      font-weight: 900;
+      cursor: pointer;
+      box-shadow: 5px 5px 0 var(--ink);
+      transition: transform .1s, box-shadow .1s;
+    }
+    .primary { background: var(--orange); }
+    .secondary { background: var(--purple); }
+    button:active:not(:disabled) {
+      transform: translate(4px, 4px);
+      box-shadow: 1px 1px 0 var(--ink);
+    }
+    button:disabled { cursor: default; opacity: .55; }
+    .game-head {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: end;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    .prompt-label, .counter-label {
+      color: var(--muted);
+      font-size: .78rem;
+      font-weight: 900;
+    }
+    .prompt {
+      margin-top: 2px;
+      font-size: clamp(2rem, 10vw, 3.2rem);
+      font-weight: 950;
+      line-height: 1;
+    }
+    .progress {
+      font-size: 1.15rem;
+      font-weight: 950;
+      white-space: nowrap;
+    }
+    .canvas-wrap {
+      position: relative;
+      overflow: hidden;
+      border: 4px solid var(--ink);
+      border-radius: 22px;
+      background: white;
+      box-shadow: 6px 6px 0 var(--ink);
+    }
+    #drawCanvas {
+      display: block;
+      width: 100%;
+      aspect-ratio: 4 / 5;
+      background: white;
+      cursor: crosshair;
+      touch-action: none;
+    }
+    .timer-badge {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      display: grid;
+      width: 76px;
+      height: 76px;
+      place-items: center;
+      border: 4px solid var(--ink);
+      border-radius: 50%;
+      background: var(--yellow);
+      font-size: 2.7rem;
+      font-weight: 950;
+      line-height: 1;
+      box-shadow: 4px 4px 0 var(--ink);
+      pointer-events: none;
+    }
+    .draw-hint {
+      margin: 15px 0 0;
+      color: var(--muted);
+      text-align: center;
+      font-size: .85rem;
+      font-weight: 800;
+    }
+    .memory-card { padding: 18px; }
+    .memory-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin: 0 2px 12px;
+    }
+    .phase-title { margin: 0; font-size: 1.15rem; }
+    .saved-image {
+      display: block;
+      width: 100%;
+      max-height: 48svh;
+      aspect-ratio: 4 / 5;
+      object-fit: contain;
+      border: 3px solid var(--ink);
+      border-radius: 18px;
+      background: white;
+    }
+    .answer-area { margin-top: 16px; }
+    #answerInput {
+      width: 100%;
+      min-height: 58px;
+      padding: 0 17px;
+      border: 3px solid var(--ink);
+      border-radius: 16px;
+      outline: none;
+      background: white;
+      color: var(--ink);
+      font-size: 1.1rem;
+      font-weight: 800;
+    }
+    #answerInput:focus { box-shadow: 0 0 0 4px rgba(115,87,255,.22); }
+    .button-row { margin-top: 12px; }
+    .feedback {
+      display: none;
+      margin: 15px 0 0;
+      padding: 14px;
+      border: 3px solid var(--ink);
+      border-radius: 16px;
+      font-weight: 900;
+      text-align: center;
+    }
+    .feedback.show { display: block; animation: pop .2s ease-out; }
+    .feedback.correct { background: #c8f5dc; color: #087542; }
+    .feedback.wrong { background: #ffd8dd; color: #a0192e; }
+    .result-card { text-align: center; }
+    .result-icon { font-size: 4.5rem; line-height: 1; }
+    .result-card h2 { margin: 14px 0 4px; font-size: 1.5rem; }
+    .score {
+      margin: 10px 0 0;
+      color: var(--orange);
+      font-size: clamp(3.2rem, 16vw, 5rem);
+      font-weight: 950;
+      letter-spacing: -.06em;
+    }
+    .rate { margin: 0 0 26px; color: var(--muted); font-size: 1.1rem; font-weight: 900; }
+    .tiny { margin: 18px 0 0; color: var(--muted); font-size: .76rem; text-align: center; }
+    @keyframes appear { from { opacity: 0; transform: translateY(8px); } }
+    @keyframes pop { 50% { transform: scale(1.03); } }
+    @media (min-width: 700px) {
+      #drawCanvas, .saved-image { aspect-ratio: 5 / 4; }
+      .memory-card { padding: 26px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: .01ms !important; }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <section id="startScreen" class="screen active" aria-labelledby="gameTitle">
+      <div class="card">
+        <p class="eyebrow">Draw fast. Remember harder.</p>
+        <h1 id="gameTitle">SKETCH <span>RUSH!</span></h1>
+        <p class="lead">3秒で次々と絵を描いて、最後に自分の絵が何だったか当てよう。</p>
+        <div class="rules" aria-label="ゲームルール">
+          <div class="rule"><b>3秒</b>で描く</div>
+          <div class="rule"><b>10枚</b>連続</div>
+          <div class="rule"><b>10問</b>思い出す</div>
+        </div>
+        <button id="startButton" class="primary" type="button">ゲームスタート</button>
+        <p class="tiny">スタート後は止まらないよ。指かマウスを準備！</p>
+      </div>
+    </section>
+
+    <section id="drawScreen" class="screen" aria-label="お絵かきフェーズ">
+      <div class="game-head">
+        <div>
+          <div class="prompt-label">今回のお題</div>
+          <div id="promptText" class="prompt">りんご</div>
+        </div>
+        <div>
+          <div class="counter-label">進行</div>
+          <div id="drawProgress" class="progress">1 / 10</div>
+        </div>
+      </div>
+      <div class="canvas-wrap">
+        <canvas id="drawCanvas" aria-label="絵を描くキャンバス"></canvas>
+        <div id="timerBadge" class="timer-badge" aria-live="polite">3</div>
+      </div>
+      <p class="draw-hint">考えるより先に描こう！</p>
+    </section>
+
+    <section id="memoryScreen" class="screen" aria-labelledby="memoryTitle">
+      <div class="card memory-card">
+        <div class="memory-head">
+          <h2 id="memoryTitle" class="phase-title">これは何の絵？</h2>
+          <span id="memoryProgress" class="progress">1 / 10</span>
+        </div>
+        <img id="savedImage" class="saved-image" alt="あなたが描いた絵">
+        <form id="answerForm" class="answer-area">
+          <label class="prompt-label" for="answerInput">描いたときのお題を入力</label>
+          <input id="answerInput" type="text" enterkeyhint="done" autocomplete="off" autocapitalize="off" maxlength="30" required>
+          <div class="button-row">
+            <button id="answerButton" class="primary" type="submit">回答する</button>
+            <button id="nextButton" class="secondary" type="button" hidden>次へ</button>
+          </div>
+        </form>
+        <div id="feedback" class="feedback" role="status" aria-live="polite"></div>
+      </div>
+    </section>
+
+    <section id="resultScreen" class="screen" aria-labelledby="resultTitle">
+      <div class="card result-card">
+        <div class="result-icon" aria-hidden="true">🏆</div>
+        <h2 id="resultTitle">あなたの記憶スコア</h2>
+        <div id="scoreText" class="score">0 / 10</div>
+        <p id="rateText" class="rate">正答率：0%</p>
+        <button id="replayButton" class="primary" type="button">もう一度遊ぶ</button>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    (() => {
+      "use strict";
+
+      const CONFIG = { rounds: 10, secondsPerRound: 3 };
+      const PROMPTS = [
+        "りんご", "犬", "車", "太陽", "魚", "傘", "家", "猫", "花", "時計",
+        "バナナ", "うさぎ", "電車", "月", "鳥", "靴", "木", "星", "コップ", "めがね",
+        "ケーキ", "ロボット", "船", "山", "きのこ", "ハート", "雪だるま", "カメラ",
+        "アイス", "かばん", "王冠", "自転車", "ヘビ", "飛行機", "ギター", "おばけ"
+      ];
+
+      const elements = {
+        screens: [...document.querySelectorAll(".screen")],
+        startScreen: document.getElementById("startScreen"),
+        drawScreen: document.getElementById("drawScreen"),
+        memoryScreen: document.getElementById("memoryScreen"),
+        resultScreen: document.getElementById("resultScreen"),
+        startButton: document.getElementById("startButton"),
+        replayButton: document.getElementById("replayButton"),
+        promptText: document.getElementById("promptText"),
+        drawProgress: document.getElementById("drawProgress"),
+        timerBadge: document.getElementById("timerBadge"),
+        canvas: document.getElementById("drawCanvas"),
+        memoryProgress: document.getElementById("memoryProgress"),
+        savedImage: document.getElementById("savedImage"),
+        answerForm: document.getElementById("answerForm"),
+        answerInput: document.getElementById("answerInput"),
+        answerButton: document.getElementById("answerButton"),
+        nextButton: document.getElementById("nextButton"),
+        feedback: document.getElementById("feedback"),
+        scoreText: document.getElementById("scoreText"),
+        rateText: document.getElementById("rateText")
+      };
+
+      const state = {
+        phase: "start",
+        prompts: [],
+        drawings: [],
+        memoryItems: [],
+        roundIndex: 0,
+        memoryIndex: 0,
+        score: 0,
+        answered: false,
+        timerFrame: 0,
+        deadline: 0
+      };
+
+      const ctx = elements.canvas.getContext("2d", { alpha: false });
+      let drawing = false;
+      let lastPoint = null;
+
+      function shuffle(items) {
+        const copy = [...items];
+        for (let i = copy.length - 1; i > 0; i -= 1) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [copy[i], copy[j]] = [copy[j], copy[i]];
+        }
+        return copy;
+      }
+
+      function shuffledForMemory(items) {
+        if (items.length < 2) return [...items];
+        let result = shuffle(items);
+        const unchanged = result.every((item, index) => item === items[index]);
+        if (unchanged) [result[0], result[1]] = [result[1], result[0]];
+        return result;
+      }
+
+      function showScreen(screen) {
+        elements.screens.forEach(item => item.classList.toggle("active", item === screen));
+      }
+
+      function resetState() {
+        cancelAnimationFrame(state.timerFrame);
+        Object.assign(state, {
+          phase: "start",
+          prompts: [],
+          drawings: [],
+          memoryItems: [],
+          roundIndex: 0,
+          memoryIndex: 0,
+          score: 0,
+          answered: false,
+          timerFrame: 0,
+          deadline: 0
+        });
+        drawing = false;
+        lastPoint = null;
+        elements.answerForm.reset();
+        elements.feedback.className = "feedback";
+        elements.feedback.textContent = "";
+        elements.answerButton.hidden = false;
+        elements.nextButton.hidden = true;
+        elements.answerInput.disabled = false;
+      }
+
+      function resizeCanvas() {
+        const rect = elements.canvas.getBoundingClientRect();
+        if (!rect.width || !rect.height) return;
+
+        const snapshot = document.createElement("canvas");
+        snapshot.width = elements.canvas.width || 1;
+        snapshot.height = elements.canvas.height || 1;
+        snapshot.getContext("2d").drawImage(elements.canvas, 0, 0);
+
+        const ratio = Math.min(window.devicePixelRatio || 1, 3);
+        const width = Math.round(rect.width * ratio);
+        const height = Math.round(rect.height * ratio);
+        if (elements.canvas.width === width && elements.canvas.height === height) return;
+
+        elements.canvas.width = width;
+        elements.canvas.height = height;
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(0, 0, width, height);
+        if (snapshot.width > 1 && snapshot.height > 1) {
+          ctx.drawImage(snapshot, 0, 0, snapshot.width, snapshot.height, 0, 0, width, height);
+        }
+        setupBrush();
+      }
+
+      function setupBrush() {
+        const ratio = Math.min(window.devicePixelRatio || 1, 3);
+        ctx.strokeStyle = "#20213a";
+        ctx.lineWidth = 7 * ratio;
+        ctx.lineCap = "round";
+        ctx.lineJoin = "round";
+      }
+
+      function clearCanvas() {
+        ctx.save();
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(0, 0, elements.canvas.width, elements.canvas.height);
+        ctx.restore();
+        setupBrush();
+      }
+
+      function pointFromEvent(event) {
+        const rect = elements.canvas.getBoundingClientRect();
+        return {
+          x: (event.clientX - rect.left) * (elements.canvas.width / rect.width),
+          y: (event.clientY - rect.top) * (elements.canvas.height / rect.height)
+        };
+      }
+
+      function beginStroke(event) {
+        if (state.phase !== "drawing") return;
+        event.preventDefault();
+        drawing = true;
+        lastPoint = pointFromEvent(event);
+        elements.canvas.setPointerCapture?.(event.pointerId);
+        ctx.beginPath();
+        ctx.arc(lastPoint.x, lastPoint.y, ctx.lineWidth / 2, 0, Math.PI * 2);
+        ctx.fillStyle = "#20213a";
+        ctx.fill();
+      }
+
+      function continueStroke(event) {
+        if (!drawing || state.phase !== "drawing") return;
+        event.preventDefault();
+        const point = pointFromEvent(event);
+        ctx.beginPath();
+        ctx.moveTo(lastPoint.x, lastPoint.y);
+        ctx.lineTo(point.x, point.y);
+        ctx.stroke();
+        lastPoint = point;
+      }
+
+      function endStroke(event) {
+        if (!drawing) return;
+        event.preventDefault();
+        drawing = false;
+        lastPoint = null;
+      }
+
+      function startGame() {
+        resetState();
+        state.prompts = shuffle(PROMPTS).slice(0, CONFIG.rounds);
+        state.phase = "drawing";
+        showScreen(elements.drawScreen);
+        resizeCanvas();
+        startRound();
+      }
+
+      function startRound() {
+        drawing = false;
+        lastPoint = null;
+        clearCanvas();
+        elements.promptText.textContent = state.prompts[state.roundIndex];
+        elements.drawProgress.textContent = `${state.roundIndex + 1} / ${CONFIG.rounds}`;
+        elements.timerBadge.textContent = String(CONFIG.secondsPerRound);
+        state.deadline = performance.now() + CONFIG.secondsPerRound * 1000;
+        state.timerFrame = requestAnimationFrame(updateTimer);
+      }
+
+      function updateTimer(now) {
+        if (state.phase !== "drawing") return;
+        const remaining = Math.max(0, state.deadline - now);
+        elements.timerBadge.textContent = String(Math.max(1, Math.ceil(remaining / 1000)));
+
+        if (remaining <= 0) {
+          finishRound();
+          return;
+        }
+        state.timerFrame = requestAnimationFrame(updateTimer);
+      }
+
+      function finishRound() {
+        drawing = false;
+        state.drawings.push({
+          prompt: state.prompts[state.roundIndex],
+          image: elements.canvas.toDataURL("image/png")
+        });
+        state.roundIndex += 1;
+
+        if (state.roundIndex < CONFIG.rounds) {
+          startRound();
+        } else {
+          startMemoryPhase();
+        }
+      }
+
+      function startMemoryPhase() {
+        state.phase = "memory";
+        state.memoryItems = shuffledForMemory(state.drawings);
+        state.memoryIndex = 0;
+        state.score = 0;
+        showScreen(elements.memoryScreen);
+        renderMemoryQuestion();
+      }
+
+      function renderMemoryQuestion() {
+        state.answered = false;
+        const item = state.memoryItems[state.memoryIndex];
+        elements.memoryProgress.textContent = `${state.memoryIndex + 1} / ${CONFIG.rounds}`;
+        elements.savedImage.src = item.image;
+        elements.answerForm.reset();
+        elements.answerInput.disabled = false;
+        elements.answerButton.hidden = false;
+        elements.nextButton.hidden = true;
+        elements.feedback.className = "feedback";
+        elements.feedback.textContent = "";
+        setTimeout(() => elements.answerInput.focus({ preventScroll: true }), 50);
+      }
+
+      function normalizeAnswer(value) {
+        return value
+          .normalize("NFKC")
+          .replace(/[\s\u3000]+/g, "")
+          .toLocaleLowerCase("ja");
+      }
+
+      function judgeAnswer(event) {
+        event.preventDefault();
+        if (state.answered) return;
+
+        const answer = elements.answerInput.value;
+        if (!answer.trim()) {
+          elements.answerInput.focus();
+          return;
+        }
+
+        state.answered = true;
+        const correctPrompt = state.memoryItems[state.memoryIndex].prompt;
+        const isCorrect = normalizeAnswer(answer) === normalizeAnswer(correctPrompt);
+
+        if (isCorrect) {
+          state.score += 1;
+          elements.feedback.textContent = "正解！";
+          elements.feedback.className = "feedback correct show";
+        } else {
+          elements.feedback.textContent = `不正解　正解：${correctPrompt}`;
+          elements.feedback.className = "feedback wrong show";
+        }
+
+        elements.answerInput.disabled = true;
+        elements.answerButton.hidden = true;
+        elements.nextButton.hidden = false;
+        elements.nextButton.textContent =
+          state.memoryIndex === CONFIG.rounds - 1 ? "結果を見る" : "次へ";
+        elements.nextButton.focus({ preventScroll: true });
+      }
+
+      function nextQuestion() {
+        if (!state.answered) return;
+        state.memoryIndex += 1;
+        if (state.memoryIndex >= CONFIG.rounds) {
+          showResult();
+        } else {
+          renderMemoryQuestion();
+        }
+      }
+
+      function showResult() {
+        state.phase = "result";
+        const rate = Math.round((state.score / CONFIG.rounds) * 100);
+        elements.scoreText.textContent = `${state.score} / ${CONFIG.rounds}`;
+        elements.rateText.textContent = `正答率：${rate}%`;
+        showScreen(elements.resultScreen);
+      }
+
+      elements.canvas.addEventListener("pointerdown", beginStroke);
+      elements.canvas.addEventListener("pointermove", continueStroke);
+      elements.canvas.addEventListener("pointerup", endStroke);
+      elements.canvas.addEventListener("pointercancel", endStroke);
+      elements.canvas.addEventListener("contextmenu", event => event.preventDefault());
+      elements.startButton.addEventListener("click", startGame);
+      elements.replayButton.addEventListener("click", startGame);
+      elements.answerForm.addEventListener("submit", judgeAnswer);
+      elements.nextButton.addEventListener("click", nextQuestion);
+      window.addEventListener("resize", resizeCanvas);
+      new ResizeObserver(resizeCanvas).observe(elements.canvas);
+
+      resizeCanvas();
+    })();
+  </script>
+</body>
+</html>
