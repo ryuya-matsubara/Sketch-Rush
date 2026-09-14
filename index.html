@@ -93,6 +93,61 @@
       color: var(--orange);
       font-size: 1.35rem;
     }
+    .settings {
+      display: grid;
+      gap: 14px;
+      margin: 0 0 24px;
+    }
+    .setting-group {
+      margin: 0;
+      padding: 0;
+      border: 0;
+    }
+    .setting-title {
+      margin: 0 0 8px;
+      color: var(--muted);
+      font-size: .82rem;
+      font-weight: 900;
+    }
+    .choice-row {
+      display: grid;
+      grid-auto-flow: column;
+      grid-auto-columns: 1fr;
+      gap: 8px;
+    }
+    .choice {
+      position: relative;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .choice input {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      opacity: 0;
+      pointer-events: none;
+    }
+    .choice span {
+      display: grid;
+      min-height: 48px;
+      place-items: center;
+      border: 2px solid var(--ink);
+      border-radius: 14px;
+      background: white;
+      font-weight: 950;
+      box-shadow: 3px 3px 0 var(--ink);
+      transition: transform .1s, background .1s, color .1s;
+    }
+    .choice input:checked + span {
+      color: white;
+      background: var(--purple);
+      transform: translate(2px, 2px);
+      box-shadow: 1px 1px 0 var(--ink);
+    }
+    .choice input:focus-visible + span {
+      outline: 4px solid rgba(115,87,255,.25);
+      outline-offset: 2px;
+    }
     .primary, .secondary {
       width: 100%;
       min-height: 58px;
@@ -271,9 +326,41 @@
         <h1 id="gameTitle">SKETCH <span>RUSH!</span></h1>
         <p class="lead">3秒で次々と絵を描いて、最後に自分の絵が何だったか当てよう。</p>
         <div class="rules" aria-label="ゲームルール">
-          <div class="rule"><b>3秒</b>で描く</div>
-          <div class="rule"><b>10枚</b>連続</div>
-          <div class="rule"><b>10問</b>思い出す</div>
+          <div class="rule"><b>2/3秒</b>で描く</div>
+          <div class="rule"><b>最大20枚</b>連続</div>
+          <div class="rule"><b>記憶</b>で勝負</div>
+        </div>
+        <div class="settings" aria-label="ゲーム設定">
+          <fieldset class="setting-group">
+            <legend class="setting-title">1枚あたりの制限時間</legend>
+            <div class="choice-row">
+              <label class="choice">
+                <input type="radio" name="seconds" value="2">
+                <span>2秒</span>
+              </label>
+              <label class="choice">
+                <input type="radio" name="seconds" value="3" checked>
+                <span>3秒</span>
+              </label>
+            </div>
+          </fieldset>
+          <fieldset class="setting-group">
+            <legend class="setting-title">問題数</legend>
+            <div class="choice-row">
+              <label class="choice">
+                <input type="radio" name="rounds" value="10" checked>
+                <span>10問</span>
+              </label>
+              <label class="choice">
+                <input type="radio" name="rounds" value="15">
+                <span>15問</span>
+              </label>
+              <label class="choice">
+                <input type="radio" name="rounds" value="20">
+                <span>20問</span>
+              </label>
+            </div>
+          </fieldset>
         </div>
         <button id="startButton" class="primary" type="button">ゲームスタート</button>
         <p class="tiny">スタート後は止まらないよ。指かマウスを準備！</p>
@@ -415,6 +502,8 @@
         answerButton: document.getElementById("answerButton"),
         nextButton: document.getElementById("nextButton"),
         feedback: document.getElementById("feedback"),
+        secondsInputs: [...document.querySelectorAll('input[name="seconds"]')],
+        roundsInputs: [...document.querySelectorAll('input[name="rounds"]')],
         scoreText: document.getElementById("scoreText"),
         rateText: document.getElementById("rateText")
       };
@@ -562,6 +651,12 @@
 
       function startGame() {
         resetState();
+        CONFIG.secondsPerRound = Number(
+          elements.secondsInputs.find(input => input.checked).value
+        );
+        CONFIG.rounds = Number(
+          elements.roundsInputs.find(input => input.checked).value
+        );
         state.prompts = shuffle(TOPICS).slice(0, CONFIG.rounds);
         state.phase = "ready";
         showScreen(elements.readyScreen);
