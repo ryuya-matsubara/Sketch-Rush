@@ -73,26 +73,6 @@
       font-weight: 700;
       line-height: 1.8;
     }
-    .rules {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 8px;
-      margin: 0 0 26px;
-    }
-    .rule {
-      padding: 13px 6px;
-      border: 2px solid var(--ink);
-      border-radius: 16px;
-      background: white;
-      text-align: center;
-      font-size: .78rem;
-      font-weight: 900;
-    }
-    .rule b {
-      display: block;
-      color: var(--orange);
-      font-size: 1.35rem;
-    }
     .settings {
       display: grid;
       gap: 14px;
@@ -324,12 +304,7 @@
       <div class="card">
         <p class="eyebrow">Draw fast. Remember harder.</p>
         <h1 id="gameTitle">SKETCH <span>RUSH!</span></h1>
-        <p class="lead">3秒で次々と絵を描いて、最後に自分の絵が何だったか当てよう。</p>
-        <div class="rules" aria-label="ゲームルール">
-          <div class="rule"><b>2/3秒</b>で描く</div>
-          <div class="rule"><b>最大20枚</b>連続</div>
-          <div class="rule"><b>記憶</b>で勝負</div>
-        </div>
+        <p class="lead">次々と絵を描いて、最後に自分の絵が何だったか当てよう。</p>
         <div class="settings" aria-label="ゲーム設定">
           <fieldset class="setting-group">
             <legend class="setting-title">1枚あたりの制限時間</legend>
@@ -363,7 +338,6 @@
           </fieldset>
         </div>
         <button id="startButton" class="primary" type="button">ゲームスタート</button>
-        <p class="tiny">スタート後は止まらないよ。指かマウスを準備！</p>
       </div>
     </section>
 
