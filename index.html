@@ -4,6 +4,13 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
   <meta name="theme-color" content="#ff6b35">
+  <meta name="application-name" content="Sketch Rush">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Sketch Rush">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="icon" type="image/png" href="./icons/sketch-rush-icon.png">
+  <link rel="apple-touch-icon" href="./icons/sketch-rush-icon.png">
   <title>Sketch Rush | 3秒お絵かき記憶ゲーム</title>
   <style>
     :root {
@@ -791,6 +798,14 @@
       elements.nextButton.addEventListener("click", nextQuestion);
       window.addEventListener("resize", resizeCanvas);
       new ResizeObserver(resizeCanvas).observe(elements.canvas);
+
+      if ("serviceWorker" in navigator) {
+        window.addEventListener("load", () => {
+          navigator.serviceWorker.register("./sw.js").catch(() => {
+            // The game still works online when service worker registration fails.
+          });
+        });
+      }
 
       resizeCanvas();
     })();

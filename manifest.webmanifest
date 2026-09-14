@@ -1,0 +1,26 @@
+{
+  "name": "Sketch Rush",
+  "short_name": "Sketch Rush",
+  "description": "素早く絵を描いて記憶力を試すお絵かきゲーム",
+  "lang": "ja",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#fff7e8",
+  "theme_color": "#ff6b35",
+  "icons": [
+    {
+      "src": "./icons/sketch-rush-icon.png",
+      "sizes": "any",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "./icons/sketch-rush-icon.png",
+      "sizes": "any",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
