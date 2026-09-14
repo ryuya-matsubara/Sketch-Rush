@@ -1,4 +1,4 @@
-const CACHE_NAME = "sketch-rush-v2";
+const CACHE_NAME = "sketch-rush-v3";
 const APP_SHELL = [
   "./",
   "./index.html",
