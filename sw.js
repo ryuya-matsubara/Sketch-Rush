@@ -1,4 +1,4 @@
-const CACHE_NAME = "sketch-rush-v4";
+const CACHE_NAME = "sketch-rush-v5";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -18,7 +18,8 @@ self.addEventListener("activate", event => {
   event.waitUntil(
     caches.keys()
       .then(keys => Promise.all(
-        keys.filter(key => key !== CACHE_NAME).map(key => caches.delete(key))
+        keys.filter(key => key.startsWith("sketch-rush-") && key !== CACHE_NAME)
+          .map(key => caches.delete(key))
       ))
       .then(() => self.clients.claim())
   );

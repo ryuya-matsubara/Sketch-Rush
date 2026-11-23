@@ -25,7 +25,10 @@
       --shadow: 0 18px 50px rgba(47, 37, 85, .16);
     }
     * { box-sizing: border-box; }
-    html, body { min-height: 100%; }
+    html, body {
+      min-height: 100%;
+      touch-action: pan-x pan-y;
+    }
     body {
       margin: 0;
       color: var(--ink);
@@ -35,6 +38,9 @@
         radial-gradient(circle at 90% 90%, rgba(115,87,255,.22), transparent 30%),
         #fff7e8;
       overscroll-behavior: none;
+      -webkit-touch-callout: none;
+      -webkit-user-select: none;
+      user-select: none;
     }
     button, input { font: inherit; }
     button { -webkit-tap-highlight-color: transparent; }
@@ -268,6 +274,9 @@
       color: var(--ink);
       font-size: 1.1rem;
       font-weight: 800;
+      -webkit-touch-callout: default;
+      -webkit-user-select: text;
+      user-select: text;
     }
     #answerInput:focus { box-shadow: 0 0 0 4px rgba(115,87,255,.22); }
     .button-row { margin-top: 12px; }
@@ -968,6 +977,13 @@
         elements.rateText.textContent = `正答率：${rate}%`;
         showScreen(elements.resultScreen);
       }
+
+      // Safari reports native pinch gestures separately from pointer events.
+      document.addEventListener("gesturestart", event => event.preventDefault(), { passive: false });
+      document.addEventListener("gesturechange", event => event.preventDefault(), { passive: false });
+      document.addEventListener("wheel", event => {
+        if (event.ctrlKey) event.preventDefault();
+      }, { passive: false });
 
       elements.canvas.addEventListener("pointerdown", beginStroke);
       elements.canvas.addEventListener("pointermove", continueStroke);
